@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "USER-SERVICE" ,configuration = RequestInterceptor.class)
+@FeignClient(name = "USER-SERVICE" ,configuration = FeignInterceptor.class , fallback = UserClientFallback.class)
 public interface UserClient {
     @GetMapping("/users/{authId}")
     UserResponse getUserByAuthId(@PathVariable Long authId);

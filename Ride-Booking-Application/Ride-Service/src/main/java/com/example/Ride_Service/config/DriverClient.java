@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "DRIVER-SERVICE" , configuration = RequestInterceptor.class)
+@FeignClient(name = "DRIVER-SERVICE" , configuration = FeignInterceptor.class , fallback = DriverClientFallback.class)
 public interface DriverClient {
     @GetMapping("/drivers/status")
     List<DriverResponse> getDriversByStatus(@RequestParam String status);

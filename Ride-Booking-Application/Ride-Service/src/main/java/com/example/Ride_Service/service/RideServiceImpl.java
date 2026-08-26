@@ -108,7 +108,7 @@ public class RideServiceImpl implements  RideService {
         kafkaTemplate.send("update-order",updateStatusRequest)
                 .whenComplete((status, exception)->{
                     if(exception!=null){
-                        throw new RuntimeException(" Kafka fail to send");
+                        throw new RuntimeException("Kafka fail to send");
                     }else{
                         System.out.println("Kafka Send successfully");
                     }
@@ -136,7 +136,7 @@ public class RideServiceImpl implements  RideService {
         kafkaTemplate.send("update-order",updateStatusRequest)
                 .whenComplete((status, exception)->{
                     if(exception!=null){
-                        throw new RuntimeException(" Kafka fail to send");
+                        throw new RuntimeException(" Kafka fail to send ");
                     }else
                         {
                         System.out.println("Kafka Send successfully");
@@ -165,7 +165,7 @@ public class RideServiceImpl implements  RideService {
         kafkaTemplate.send("update-order",updateStatusRequest)
                 .whenComplete((status, exception)->{
                     if(exception!=null){
-                        throw new RuntimeException(" Kafka fail to send");
+                        throw new RuntimeException(" Kafka fail to  send ");
                     }else
                     {
                         System.out.println("Kafka Send successfully");
@@ -189,12 +189,12 @@ public class RideServiceImpl implements  RideService {
         driverClient.updateDriverStatus(ride.getDriverId(), request);
         RideEntity savedRide= rideRepo.save(ride);
 
-        UpdateStatusRequest updateStatusRequest = new UpdateStatusRequest();
-        updateStatusRequest.setRideId(savedRide.getRideId());
-        updateStatusRequest.setOrderStatus("COMPLETED");
-        updateStatusRequest.setChoice(choice.toUpperCase());
+        UpdateStatusRequest statusRequest = new UpdateStatusRequest();
+        statusRequest.setRideId(savedRide.getRideId());
+        statusRequest.setOrderStatus("COMPLETED");
+        statusRequest.setChoice(choice.toUpperCase());
 
-        kafkaTemplate.send("update-order",updateStatusRequest)
+        kafkaTemplate.send("update-order", statusRequest )
                 .whenComplete((status, exception)->{
                     if(exception!=null){
                         throw new RuntimeException(" Kafka fail to send");
