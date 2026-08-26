@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Service
@@ -26,6 +27,14 @@ public class JwtService {
 
     public Date extractExpiration(String token){
         return extractInfo(token, Claims::getExpiration);
+    }
+
+    public String getRole(String token){
+        return extractClaimsJws(token).get("role",String.class);
+    }
+
+    public List<String> getAuthorities(String token){
+        return extractClaimsJws(token).get("authorities",List.class);
     }
 
     public boolean isExpired(String authToken){

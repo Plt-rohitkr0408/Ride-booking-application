@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateDriverRequest {
-
     private String name;
     private String email;
     private String phone;

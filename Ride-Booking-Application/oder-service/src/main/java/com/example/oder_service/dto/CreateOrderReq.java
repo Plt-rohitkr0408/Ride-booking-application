@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor @Builder
-public class CreateOrderRequest {
+public class CreateOrderReq {
     private Long userId;
     private Long driverId;
     private Long rideId;

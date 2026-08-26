@@ -21,7 +21,8 @@ public class SecurityConfig {
         http
                 .csrf(c-> c.disable())
                 .authorizeHttpRequests(auth->
-                        auth
+                        auth.requestMatchers("/rides/create" , "/rides/*/cancel").hasRole("USER")
+                                .requestMatchers("/rides/*/accept"  ,"/rides/*/completed" ,"/rides/*/start").hasRole("DRIVER")
                                 .anyRequest().authenticated()
                 ).addFilterBefore(jwtFilter,  UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session->
@@ -30,4 +31,7 @@ public class SecurityConfig {
 
         return  http.build();
     }
+
+
+
 }

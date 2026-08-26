@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Service
@@ -24,6 +25,13 @@ public class JwtService {
         return extractClaimByToken(token, Claims::getExpiration);
     }
 
+    public String getRole(String token) {
+        return extractClaims(token).get("role", String.class);
+    }
+
+    public List<String> getAuthorities(String token) {
+        return extractClaims(token).get("authorities", List.class);
+    }
     public boolean isTokenExpired(String token) {
         return !extractExpiration(token).before(new Date());
     }

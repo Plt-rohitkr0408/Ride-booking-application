@@ -13,6 +13,8 @@ import com.example.auth_service.repository.AuthUserRepository;
 import com.example.auth_service.repository.RefreshTokenRepository;
 import com.example.auth_service.security.JwtService;
 import com.example.auth_service.service.AuthService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,6 +36,10 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
     private final DriverClient driverClient;
+
+    private static final Long secretNumber = 1L;
+
+    private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     @Value("${refresh.expiration}")
     private Long expiredIn;
@@ -49,15 +56,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public RegisterResponse registerUser(RegisterUser registerUser) {
+    @Transactional
+    public RegisterResponse register(Register register) {
         AuthUser authUser = new AuthUser();
-        authUser.setEmail(registerUser.getEmail());
-        authUser.setPassword(passwordEncoder.encode(registerUser.getPassword()));
-        authUser.setName(registerUser.getName());
-        authUser.setPhone(registerUser.getPhone());
-        authUser.setRole(Role.ROLE_USER);
+        authUser.setEmail(register.getEmail());
+        authUser.setPassword(passwordEncoder.encode(register.getPassword()));
+        authUser.setName(register.getName());
+        authUser.setPhone(register.getPhone());
+        authUser.setRole(Role.valueOf(register.getRole().toUpperCase()));
         AuthUser saveUser = authUserRepository.save(authUser);
 
+        if(register.getRole().equalsIgnoreCase("USER")){
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .email(saveUser.getEmail())
                 .password(saveUser.getPassword())
@@ -65,45 +74,30 @@ public class AuthServiceImpl implements AuthService {
                 .phone(saveUser.getPhone())
                 .authId(authUser.getId())
                 .build();
+        logger.info("CreateUser Request successfully");
         userClient.createUser(createUserRequest);
+        }
+        else if( register.getRole().equalsIgnoreCase("DRIVER")){
+            CreateDriverRequest createDriverRequest = CreateDriverRequest.builder()
+                    .name(saveUser.getName())
+                    .authId(saveUser.getId())
+                    .email(saveUser.getEmail())
+                    .phone(saveUser.getPhone())
+                    .password(passwordEncoder.encode(saveUser.getPassword()))
+                    .build();
+        logger.info("Driver Request successfully");
+            driverClient.createDriver(createDriverRequest);
+        }
 
         RegisterResponse registerResponse = new RegisterResponse();
-        registerResponse.setEmail(authUser.getEmail());
-        registerResponse.setRole(authUser.getRole().toString());
-        registerResponse.setUsername(authUser.getName());
-        registerResponse.setId(authUser.getId());
-        registerResponse.setMessage(authUser.getRole() + " Registered Successfully");
+        registerResponse.setEmail(saveUser.getEmail());
+        registerResponse.setRole(saveUser.getRole().toString());
+        registerResponse.setUsername(saveUser.getName());
+        registerResponse.setId(saveUser.getId());
+        registerResponse.setMessage(saveUser.getRole() + " Registered Successfully");
         return registerResponse;
     }
 
-    @Override
-    public RegisterResponse registerDriver(RegisterDriver registerDriver) {
-        AuthUser authUser = new AuthUser();
-        authUser.setEmail(registerDriver.getEmail());
-        authUser.setPassword(passwordEncoder.encode(registerDriver.getPassword()));
-        authUser.setName(registerDriver.getName());
-        authUser.setPhone(registerDriver.getPhone());
-        authUser.setRole(Role.ROLE_DRIVER);
-      AuthUser save =  authUserRepository.save(authUser);
-
-        CreateDriverRequest createDriverRequest = new CreateDriverRequest();
-        createDriverRequest.setName(save.getName());
-        createDriverRequest.setPhone(save.getPhone());
-        createDriverRequest.setEmail(save.getEmail());
-        createDriverRequest.setPassword(save.getPassword());
-        createDriverRequest.setAuthId(save.getId());
-
-        driverClient.createDriver(createDriverRequest);
-
-        RegisterResponse registerResponse = new RegisterResponse();
-        registerResponse.setEmail(authUser.getEmail());
-        registerResponse.setRole(authUser.getRole().toString());
-        registerResponse.setUsername(authUser.getName());
-        registerResponse.setId(authUser.getId());
-        registerResponse.setMessage("Driver Registered Successfully");
-
-        return registerResponse;
-    }
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {

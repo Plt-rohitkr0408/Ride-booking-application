@@ -1,12 +1,16 @@
 package com.example.auth_service.custom;
 
 import com.example.auth_service.entity.AuthUser;
+import com.example.auth_service.entity.RoleAuthority;
+import com.example.auth_service.enums.Authority;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public class CustomUser implements UserDetails {
 
@@ -18,7 +22,14 @@ public class CustomUser implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(user.getRole().toString()));
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_"+user.getRole().toString()));
+
+        Set<Authority> roleAuth = RoleAuthority.getRoleAuthorities(user.getRole());
+
+        roleAuth.forEach(authority -> authorities.add(new SimpleGrantedAuthority(authority.toString())));
+
+        return authorities;
     }
 
     @Override

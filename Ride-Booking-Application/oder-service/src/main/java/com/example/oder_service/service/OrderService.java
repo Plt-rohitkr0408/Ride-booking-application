@@ -1,17 +1,19 @@
 package com.example.oder_service.service;
 
-import com.example.oder_service.dto.CreateOrderRequest;
+import com.example.oder_service.dto.CreateOrderReq;
 import com.example.oder_service.dto.OrderResponse;
 import com.example.oder_service.dto.UpdateStatusRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 public interface OrderService {
 
-    public List<OrderResponse> getAllOrders();
-    public List<OrderResponse> getOrderByUserId(Long userId);
-    public List<OrderResponse> getOrderByDriverId(Long driverId);
-    public OrderResponse createOrder(CreateOrderRequest request);
-    public OrderResponse updateOrderStatus(Long orderId, UpdateStatusRequest request);
+    public Page<OrderResponse> getAllOrders(Pageable pageable);
+    public Page<OrderResponse> getOrderByUserId(Long userId , Pageable pageable);
+    public Page<OrderResponse> getOrderByDriverId(Long driverId , Pageable pageable);
+    public OrderResponse createOrder(CreateOrderReq request);
+    public OrderResponse updateOrderStatus(UpdateStatusRequest request);
     public String deleteOrder(Long orderId);
+    public OrderResponse getOrderByRideId(Long rideId);
 }

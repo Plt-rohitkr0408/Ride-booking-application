@@ -1,6 +1,7 @@
 package com.example.auth_service.security;
 
 import com.example.auth_service.entity.AuthUser;
+import com.example.auth_service.entity.RoleAuthority;
 import com.example.auth_service.repository.AuthUserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -26,12 +27,38 @@ public class JwtService {
     @Value("${token.secret.key}")
     private String secretkey;
 
+
+    public String servicetoken(){
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + 3600000);
+        String type = "SERVICE";
+        List<String> authority = List.of("USER_CREATE","DRIVER_CREATE");
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("type",type);
+        claims.put("authorities",authority);
+
+        return Jwts.builder()
+                .signWith(generateKey())
+                .subject("auth-service")
+                .issuedAt(now)
+                .expiration(exp)
+                .claims(claims)
+                .compact();
+    }
+
     public String accessToken(String email){
+
         AuthUser authUser = authUserRepository.findByEmail(email);
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + 3600 * 1000);
+        List<String> authorities = RoleAuthority.getRoleAuthorities(authUser.getRole()).stream().map(
+                Enum::toString
+        ).toList();
+
+        System.out.println(authorities);
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role",authUser.getRole().toString());
+        claims.put("role",authUser.getRole().name());
+        claims.put("authorities", authorities );
         return Jwts.builder()
                 .signWith(generateKey())
                 .issuedAt(now)
@@ -46,6 +73,11 @@ public class JwtService {
         AuthUser authUser = authUserRepository.findByEmail(email);
         Map<String, Object> claims = new HashMap<>();
         claims.put("role",authUser.getRole().toString());
+        List<String> authorities = RoleAuthority.getRoleAuthorities(authUser.getRole())
+                .stream()
+                .map(Enum::toString)
+                .toList();
+        claims.put("authorities", authorities);
         return Jwts.builder()
                 .signWith(generateKey())
                 .claims(claims)
@@ -61,6 +93,15 @@ public class JwtService {
 
     public Date getExpiration(String token){
         return getClaimsByToken(token, Claims::getExpiration);
+    }
+
+    public String getRole(String token){
+        String role = extractClaimsToken(token).get("role",String.class);
+        return role;
+    }
+
+    public Set getAuthorities(String token){
+        return extractClaimsToken(token).get("authority",Set.class);
     }
 
     public boolean isTokenExpired(String token){

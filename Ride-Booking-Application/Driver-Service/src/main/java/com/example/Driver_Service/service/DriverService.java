@@ -5,6 +5,8 @@ import com.example.Driver_Service.dto.request.UpdateDriverRequest;
 import com.example.Driver_Service.dto.request.UpdateLocationRequest;
 import com.example.Driver_Service.dto.request.UpdateStatusRequest;
 import com.example.Driver_Service.dto.response.DriverResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -14,5 +16,7 @@ public interface DriverService {
     DriverResponse updateDriver(Long authId, UpdateDriverRequest updateDriverRequest);
     void updateLocation(Long authId, UpdateLocationRequest updateLocationRequest);
     void updateStatus(Long authId, UpdateStatusRequest  updateStatusRequest);
-    List<DriverResponse> getDrivers(String status);
+    List<DriverResponse> getDriversByStatus(String status );
+
+    Page<DriverResponse> getAllDrivers(Pageable pageable);
 }

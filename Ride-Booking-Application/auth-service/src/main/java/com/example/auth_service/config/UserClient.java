@@ -6,8 +6,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "USER-SERVICE")
+@FeignClient(name = "USER-SERVICE" , configuration = FeignConfig.class)
 public interface UserClient {
-    @PostMapping("/api/v1/user")
+    @PostMapping("/users/create")
     void createUser(@RequestBody CreateUserRequest createUserRequest);
 }

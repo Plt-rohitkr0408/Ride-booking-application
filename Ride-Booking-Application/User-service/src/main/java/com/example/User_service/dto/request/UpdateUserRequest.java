@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateUserRequest {
-    private Long authId;
     private String profileImage;
     private String homeAddress;
     private String officeAddress;

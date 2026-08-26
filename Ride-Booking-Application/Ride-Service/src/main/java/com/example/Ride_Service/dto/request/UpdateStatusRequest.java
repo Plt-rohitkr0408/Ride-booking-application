@@ -1,4 +1,4 @@
-package com.example.oder_service.dto;
+package com.example.Ride_Service.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor @NoArgsConstructor
 @Builder
-public class UpdatePaymentStatusRequest {
+public class UpdateStatusRequest {
+    private Long rideId;
+    private String  orderStatus;
     private String paymentStatus;
+    private String choice;
 }

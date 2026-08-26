@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateUserRequest {
 
+
     private Long authId;
     private String name;
     private String email;

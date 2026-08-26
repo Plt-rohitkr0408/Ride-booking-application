@@ -6,12 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "USER-SERVICE")
+@FeignClient(name = "USER-SERVICE" ,configuration = RequestInterceptor.class)
 public interface UserClient {
-    @GetMapping("/api/v1/user/{authId}")
+    @GetMapping("/users/{authId}")
     UserResponse getUserByAuthId(@PathVariable Long authId);
 
-    @GetMapping("/api/v1/user/email")
+    @GetMapping("/users/email")
     UserResponse getUserByEmail(@RequestParam("email") String email);
-
 }

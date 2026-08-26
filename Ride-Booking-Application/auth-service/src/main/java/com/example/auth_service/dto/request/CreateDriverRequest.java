@@ -10,8 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateDriverRequest {
     private String name;
-    private Long authId;
     private String email;
     private String phone;
+    private Long authId;
     private String password;
+
 }

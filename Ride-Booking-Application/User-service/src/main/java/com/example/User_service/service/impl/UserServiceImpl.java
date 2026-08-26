@@ -4,9 +4,13 @@ import com.example.User_service.dto.request.CreateUserRequest;
 import com.example.User_service.dto.request.UpdateUserRequest;
 import com.example.User_service.dto.response.UserResponse;
 import com.example.User_service.entity.User;
+import com.example.User_service.mapper.UserMapper;
 import com.example.User_service.repository.UserRepository;
 import com.example.User_service.service.UserService;
 import jakarta.ws.rs.BadRequestException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,80 +33,54 @@ public class UserServiceImpl implements UserService {
 
         User saveUser =userRepository.save(user);
 
-        UserResponse userResponse = UserResponse.builder()
-                .name(saveUser.getName())
-                .email(saveUser.getEmail())
-                .phone(saveUser.getPhone())
-                .authId(saveUser.getAuthId())
-                .userId(saveUser.getUserId())
-                .message("User created Successfully")
-                .build();
+        UserResponse userResponse = UserMapper.toUserResponse(saveUser, "Created Successfully");
         return userResponse;
     }
 
     @Override
-    public UserResponse updateUser(UpdateUserRequest updateUserRequest) {
-        User user =userRepository.findByAuthId(updateUserRequest.getAuthId());
+    public UserResponse updateUser(UpdateUserRequest updateUserRequest , Authentication authentication) {
+        User user  = userRepository.findByEmail(authentication.getName());
         user.setHomeAddress(updateUserRequest.getHomeAddress());
         user.setOfficeAddress(updateUserRequest.getOfficeAddress());
         user.setProfileImage(updateUserRequest.getProfileImage());
         User saveUser =userRepository.save(user);
-        UserResponse userResponse = UserResponse.builder()
-                .phone(saveUser.getPhone())
-                .email(saveUser.getEmail())
-                .name(saveUser.getName())
-                .authId(saveUser.getAuthId())
-                .userId(saveUser.getUserId())
-                .homeAddress(saveUser.getHomeAddress())
-                .officeAddress(saveUser.getOfficeAddress())
-                .profileImage(saveUser.getProfileImage())
-                .message("User Updated Successfully")
-                .build();
+        UserResponse userResponse = UserMapper.toUserResponse(saveUser, "Updated Successfully");
         return userResponse;
     }
 
     @Override
-    public void deleteUser(Long authId) {
-        if(userRepository.existsByAuthId(authId)) {
-            userRepository.deleteById(authId);
-        }
+    public void deleteUser(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName());
+        userRepository.delete(user);
     }
 
     @Override
-    public UserResponse getUserProfile(Long authId) {
-        if(!userRepository.existsByAuthId(authId)) {
+    public UserResponse getUserProfile(Long userId) {
+        if(!userRepository.existsByUserId(userId)) {
             throw new BadRequestException("User does not exist");
         }
-       User user = userRepository.findByAuthId(authId);
-        UserResponse userResponse = UserResponse.builder()
-                .name(user.getName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .authId(user.getAuthId())
-                .userId(user.getUserId())
-                .homeAddress(user.getHomeAddress())
-                .officeAddress(user.getOfficeAddress())
-                .profileImage(user.getProfileImage())
-                .message("Updated Profile")
-                .build();
-
+       User user = userRepository.findByUserId(userId);
+        UserResponse userResponse = UserMapper.toUserResponse(user, "Profile Updated Successfully");
         return  userResponse;
     }
 
     public UserResponse getByEmail(String email){
         User user = userRepository.findByEmail(email);
-        UserResponse userResponse = UserResponse.builder()
-                .name(user.getName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .authId(user.getAuthId())
-                .userId(user.getUserId())
-                .homeAddress(user.getHomeAddress())
-                .officeAddress(user.getOfficeAddress())
-                .profileImage(user.getProfileImage())
-                .message("Updated Profile")
-                .build();
+        if(user == null){
+            throw new BadRequestException("User does not exist");
+        }
+        UserResponse userResponse =  UserMapper.toUserResponse(user, "User Updated Successfully");
 
         return  userResponse;
+    }
+
+    @Override
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        if(users == null){
+            throw new BadRequestException("Users is empty");
+        }
+        Page<UserResponse> userResponse = users.map(user -> UserMapper.toUserResponse(user, "Fetch Successfully"));
+        return userResponse;
     }
 }

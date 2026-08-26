@@ -4,11 +4,18 @@ import com.example.User_service.dto.request.CreateUserRequest;
 import com.example.User_service.dto.request.UpdateUserRequest;
 import com.example.User_service.dto.response.UserResponse;
 import com.example.User_service.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -17,20 +24,29 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponse>> getAllUsers(@PageableDefault(size = 10,
+            sort = "name",
+            direction = Sort.Direction.DESC) Pageable pageable) {
+            Page<UserResponse> userResponses = userService.getAllUsers(pageable);
+            return ResponseEntity.status(HttpStatus.OK).body(userResponses);
+    }
+
+    @PostMapping("/create")
     public void createUser(@RequestBody CreateUserRequest request) {
         UserResponse userResponse = userService.createUser(request);
     }
 
-    @PutMapping
-    public ResponseEntity<UserResponse> updateUser(@RequestBody UpdateUserRequest request) {
-        UserResponse userResponse = userService.updateUser(request);
+    @PutMapping("/update")
+    public ResponseEntity<UserResponse> updateUser(@RequestBody UpdateUserRequest request , Authentication authentication) {
+        UserResponse userResponse = userService.updateUser(request , authentication);
         return ResponseEntity.ok(userResponse);
     }
 
-    @DeleteMapping("/{authId}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long authId){
-        userService.deleteUser(authId);
+    @DeleteMapping("/delete/id")
+    public ResponseEntity<String> deleteUser(Authentication authentication_){
+        userService.deleteUser(authentication_);
         return ResponseEntity.ok("Deleted");
     }
 

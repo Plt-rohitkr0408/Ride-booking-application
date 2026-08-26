@@ -6,10 +6,11 @@ import com.example.Ride_Service.service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/ride")
+@RequestMapping("/rides")
 public class RideController {
 
     private final RideService rideService;
@@ -25,13 +26,14 @@ public class RideController {
     }
 
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<RideResponse> createRide(@RequestBody CreateRideRequest createRideRequest, Authentication authentication){
         RideResponse rideResponse = rideService.createRide(createRideRequest, authentication);
         return ResponseEntity.ok(rideResponse);
     }
 
     @PutMapping("/{rideId}/accept")
+    @Transactional
     public ResponseEntity<RideResponse> acceptRide(@PathVariable Long rideId){
         RideResponse rideResponse = rideService.AccceptRide(rideId);
         return ResponseEntity.ok(rideResponse);
@@ -50,8 +52,8 @@ public class RideController {
     }
 
     @PutMapping("/{rideId}/completed")
-    public ResponseEntity<RideResponse>  completedRide(@PathVariable Long rideId){
-        RideResponse rideResponse = rideService.CompleteRide(rideId);
+    public ResponseEntity<RideResponse>  completedRide(@PathVariable Long rideId , @RequestParam("choice") String choice){
+        RideResponse rideResponse = rideService.CompleteRide(rideId,choice);
         return ResponseEntity.ok(rideResponse);
     }
 

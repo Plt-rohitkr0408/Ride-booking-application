@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "DRIVER-SERVICE" )
+@FeignClient(name = "DRIVER-SERVICE" , configuration = RequestInterceptor.class)
 public interface DriverClient {
-    @GetMapping("/api/v1/driver/status")
-    List<DriverResponse> getAvailableDriver(@RequestParam String status);
+    @GetMapping("/drivers/status")
+    List<DriverResponse> getDriversByStatus(@RequestParam String status);
 
-    @PutMapping("/api/v1/driver/update/status/{id}")
-    void updateStatus(@PathVariable Long id,@RequestBody UpdateDriverStatusRequest status);
+    @PutMapping("/drivers/update/status/{id}")
+    void updateDriverStatus(@PathVariable Long id,@RequestBody UpdateDriverStatusRequest status);
 
 }

@@ -10,5 +10,5 @@ public interface RideService {
     RideResponse AccceptRide(Long rideId);
     RideResponse CancelledRide(Long rideId);
     RideResponse StartRide(Long rideId);
-    RideResponse CompleteRide(Long rideId);
+    RideResponse CompleteRide(Long rideId , String choice);
 }

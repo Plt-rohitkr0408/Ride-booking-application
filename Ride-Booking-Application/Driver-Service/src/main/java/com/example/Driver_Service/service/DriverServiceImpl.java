@@ -8,6 +8,8 @@ import com.example.Driver_Service.dto.response.DriverResponse;
 import com.example.Driver_Service.entity.Driver;
 import com.example.Driver_Service.enums.DriverStatus;
 import com.example.Driver_Service.repository.DriverRepo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -21,8 +23,10 @@ public class DriverServiceImpl implements DriverService {
     public DriverServiceImpl(DriverRepo driverRepo){
         this.driverRepo = driverRepo;
     }
+
     @Override
     public DriverResponse createDriver(CreateDriverRequest createDriverRequest) {
+
         Driver driver = new Driver();
         driver.setName(createDriverRequest.getName());
         driver.setAuthId(createDriverRequest.getAuthId());
@@ -32,7 +36,7 @@ public class DriverServiceImpl implements DriverService {
         driver.setPassword(createDriverRequest.getPassword());
         Driver saveDriver = driverRepo.save(driver);
         DriverResponse driverResponse = DriverResponse.builder()
-                .id(saveDriver.getDriver_id())
+                .id(saveDriver.getDriverId())
                 .email(saveDriver.getEmail())
                 .phone(saveDriver.getPhone())
                 .authId(saveDriver.getAuthId())
@@ -44,19 +48,20 @@ public class DriverServiceImpl implements DriverService {
 
 
     @Override
-    public DriverResponse getDriver(Long authId) {
+    public DriverResponse getDriver(Long driverId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println(authentication.getName());
-        System.out.println(driverRepo.existsById(authId));
-        if(driverRepo.existsById(authId)){
+
+        if(driverRepo.existsById(driverId)){
             throw new RuntimeException("auth not found");
         }
-        Driver driver = driverRepo.findByAuthId(authId);
+        Driver driver = driverRepo.findById(driverId).orElseThrow(
+                ()-> new RuntimeException("driver not found")
+        );
 
         System.out.println(driver);
         DriverResponse driverResponse = DriverResponse.builder()
                 .email(driver.getEmail())
-                .id(driver.getDriver_id())
+                .id(driver.getDriverId())
                 .phone(driver.getPhone())
                 .authId(driver.getAuthId())
                 .name(driver.getName())
@@ -69,12 +74,10 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public DriverResponse updateDriver(Long authId, UpdateDriverRequest updateDriverRequest) {
-//        if(!driverRepo.existsById(authId)){
-//            throw new RuntimeException("auth not found");
-//        }
-
-        Driver driver = driverRepo.findByAuthId(authId);
+    public DriverResponse updateDriver(Long driverId, UpdateDriverRequest updateDriverRequest) {
+        Driver driver = driverRepo.findById(driverId).orElseThrow(
+                ()-> new RuntimeException("driver not found")
+        );
         driver.setLicence(updateDriverRequest.getLicence());
         driver.setVehicleNumber(updateDriverRequest.getVehicleNumber());
         driver.setVehicleTye(updateDriverRequest.getVehicleTye());
@@ -82,7 +85,7 @@ public class DriverServiceImpl implements DriverService {
 
         DriverResponse driverResponse = DriverResponse.builder()
                 .email(saveDriver.getEmail())
-                .id(saveDriver.getDriver_id())
+                .id(saveDriver.getDriverId())
                 .phone(saveDriver.getPhone())
                 .authId(saveDriver.getAuthId())
                 .name(saveDriver.getName())
@@ -95,36 +98,57 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public void updateLocation(Long authId, UpdateLocationRequest updateLocationRequest) {
-        if(!driverRepo.existsById(authId)){
+    public void updateLocation(Long driverId, UpdateLocationRequest updateLocationRequest) {
+        if(!driverRepo.existsById(driverId)){
             throw new RuntimeException("auth not found");
         }
 
-        Driver driver = driverRepo.findByAuthId(authId);
+        Driver driver = driverRepo.findById(driverId).orElseThrow(
+                ()-> new RuntimeException("driver not found")
+        );
         driver.setLatitude(updateLocationRequest.getLatitude());
         driver.setLongitude(updateLocationRequest.getLongitude());
         Driver  saveDriver = driverRepo.save(driver);
     }
 
     @Override
-    public void updateStatus(Long authId, UpdateStatusRequest updateStatusRequest) {
-        if(!driverRepo.existsById(authId)){
-            throw new RuntimeException("auth not found");
-        }
-        Driver driver =  driverRepo.findByAuthId(authId);
+    public void updateStatus(Long driverId, UpdateStatusRequest updateStatusRequest) {
+        Driver driver = driverRepo.findById(driverId).orElseThrow(
+                ()-> new RuntimeException("driver not found")
+        );
         driver.setStatus(DriverStatus.valueOf(updateStatusRequest.getStatus().toUpperCase()));
         Driver saveDriver = driverRepo.save(driver);
     }
 
+
     @Override
-    public List<DriverResponse> getDrivers(String status) {
-       List<Driver> drivers= driverRepo.findByStatus(DriverStatus.valueOf(status.toUpperCase()));
-       return drivers.stream().map(m->
-               DriverResponse.builder().status(m.getStatus()).vehicleTye(m.getVehicleTye())
-                       .licence(m.getLicence()).vehicleNumber(m.getVehicleNumber())
-                       .authId(m.getAuthId()).email(m.getEmail())
-                       .id(m.getDriver_id())
-                       .name(m.getName()).phone(m.getPhone()).build()
-               ).toList();
+    public Page<DriverResponse> getAllDrivers(Pageable pageable) {
+        return driverRepo.findAll(pageable).map(m -> DriverResponse.builder()
+                .status(m.getStatus()).vehicleTye(m.getVehicleTye())
+                .licence(m.getLicence()).vehicleNumber(m.getVehicleNumber())
+                .authId(m.getAuthId()).email(m.getEmail())
+                .id(m.getDriverId())
+                .name(m.getName()).phone(m.getPhone()).build()
+        );
+    }
+
+
+    @Override
+    public List<DriverResponse> getDriversByStatus(String status) {
+       List<Driver> drivers = driverRepo.findByStatus(DriverStatus.valueOf(status.toUpperCase()));
+       List<DriverResponse> driverResponses = drivers.stream().map(driver-> DriverResponse.builder()
+               .id(driver.getDriverId())
+               .licence(driver.getLicence())
+               .email(driver.getEmail())
+               .status(driver.getStatus())
+               .vehicleNumber(driver.getVehicleNumber())
+               .vehicleTye(driver.getVehicleTye())
+               .authId(driver.getAuthId())
+               .phone(driver.getPhone())
+               .name(driver.getName())
+               .rating(driver.getRating())
+               .build()
+       ).toList();
+       return driverResponses;
     }
 }
