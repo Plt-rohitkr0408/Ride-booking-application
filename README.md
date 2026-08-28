@@ -25,7 +25,6 @@ Service Discovery: Eureka | Async: Kafka | Cache: Redis
 ### 🚀 How to Run
 docker-compose up -d
 mvn spring-boot:run for each service
-Swagger: http://localhost:8080/swagger-ui.html
 
 ### 📸 Swagger Screenshots
 [Add 3-4 screenshots here]
