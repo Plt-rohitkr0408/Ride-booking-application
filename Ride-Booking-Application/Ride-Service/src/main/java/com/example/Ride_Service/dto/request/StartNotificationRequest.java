@@ -1,34 +1,31 @@
-package com.example.Notification_Service.dto.request;
+package com.example.Ride_Service.dto.request;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class StartNotificationRequest {
-    @NotNull
+
     private Long rideId;
-    @NotBlank
+
     private String prickedAddress;
-    @NotBlank
+
     private String droppedAddress;
 
-    @Email
     private String email;
-    @NotBlank
+
     private String username;
-    @NotBlank
+
     private String driverName;
-    @NotBlank
+
     private String status;
-    @NotNull
+
     private Double fare;
-    @NotBlank
+
     private String paymentStatus;
 }

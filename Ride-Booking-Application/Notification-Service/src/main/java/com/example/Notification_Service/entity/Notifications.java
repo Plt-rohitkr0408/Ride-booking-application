@@ -29,7 +29,7 @@ public class Notifications {
     private LocalDateTime rideCompletedDate;
     private Double fare;
     private String status;
-
+    private String paymentStatus;
 
 
 }

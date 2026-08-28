@@ -2,10 +2,7 @@ package com.example.Ride_Service.service;
 
 import com.example.Ride_Service.config.DriverClient;
 import com.example.Ride_Service.config.UserClient;
-import com.example.Ride_Service.dto.request.CreateOrderReq;
-import com.example.Ride_Service.dto.request.CreateRideRequest;
-import com.example.Ride_Service.dto.request.UpdateDriverStatusRequest;
-import com.example.Ride_Service.dto.request.UpdateStatusRequest;
+import com.example.Ride_Service.dto.request.*;
 import com.example.Ride_Service.dto.response.DriverResponse;
 import com.example.Ride_Service.dto.response.RideResponse;
 import com.example.Ride_Service.dto.response.UserResponse;
@@ -92,6 +89,20 @@ public class RideServiceImpl implements  RideService {
 
         kafkaTemplate.send("create-order",  createOrderReq);
         RideResponse rideResponse = RideMapper.toResponse(saveRide);
+
+        StartNotificationRequest snr = new StartNotificationRequest();
+        snr.setEmail(email);
+        snr.setFare(saveRide.getFare());
+        snr.setPrickedAddress(saveRide.getPickedAddress());
+        snr.setDroppedAddress(saveRide.getDropedAddress());
+        snr.setUsername(userResponse.getName());
+        snr.setDriverName(driverResponse.get(0).getName());
+        snr.setPaymentStatus("PENDING");
+        snr.setRideId(saveRide.getRideId());
+        snr.setStatus("CREATED");
+
+        kafkaTemplate.send("notification-send",snr);
+
         System.out.println("Every thing is fine");
         return rideResponse;
     }
@@ -104,8 +115,9 @@ public class RideServiceImpl implements  RideService {
 
     @Override
     @Transactional
-    public RideResponse AccceptRide(Long rideId) {
+    public RideResponse AccceptRide(Long rideId, Authentication authentication) {
         RideEntity ride = rideRepo.findById(rideId).orElseThrow(()-> new IllegalStateException("ride not found"));
+
         ride.setRideStatus(RideStatus.ACCEPTED);
         UpdateDriverStatusRequest request = new UpdateDriverStatusRequest();
         request.setStatus("BUSY");
@@ -127,6 +139,7 @@ public class RideServiceImpl implements  RideService {
                     }
                 });
         System.out.println("Update Order Status");
+
         return RideMapper.toResponse(saved);
     }
 
@@ -216,7 +229,13 @@ public class RideServiceImpl implements  RideService {
                         System.out.println("Kafka Send successfully");
                     }
                 });
-        System.out.println("Update Order Status");
+
+        StartNotificationRequest snr = new StartNotificationRequest();
+        snr.setRideId(savedRide.getRideId());
+        snr.setStatus("COMPLETED");
+        snr.setPaymentStatus("COMPLETED");
+        snr.setFare(savedRide.getFare());
+        kafkaTemplate.send("notification-send", snr);
 
         return RideMapper.toResponse(savedRide);
     }

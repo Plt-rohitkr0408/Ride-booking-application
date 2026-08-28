@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 public interface RideService {
     RideResponse createRide(CreateRideRequest createRideRequest, Authentication authentication);
     RideResponse getRides(Long rideId);
-    RideResponse AccceptRide(Long rideId);
+    RideResponse AccceptRide(Long rideId , Authentication authentication);
     RideResponse CancelledRide(Long rideId);
     RideResponse StartRide(Long rideId);
     RideResponse CompleteRide(Long rideId , String choice);

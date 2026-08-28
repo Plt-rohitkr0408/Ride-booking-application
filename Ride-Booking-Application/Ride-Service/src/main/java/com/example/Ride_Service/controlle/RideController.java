@@ -34,8 +34,8 @@ public class RideController {
 
     @PutMapping("/{rideId}/accept")
     @Transactional
-    public ResponseEntity<RideResponse> acceptRide(@PathVariable Long rideId){
-        RideResponse rideResponse = rideService.AccceptRide(rideId);
+    public ResponseEntity<RideResponse> acceptRide(@PathVariable Long rideId , Authentication authentication){
+        RideResponse rideResponse = rideService.AccceptRide(rideId ,authentication);
         return ResponseEntity.ok(rideResponse);
     }
 
