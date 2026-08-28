@@ -28,6 +28,8 @@ public class RideServiceImpl implements  RideService {
     private final RideRepo rideRepo;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    final double EARTH_RADIUS_KM = 6378.137;
+
     public RideServiceImpl(UserClient userClient, DriverClient driverClient, RideRepo rideRepo, KafkaTemplate<String, Object> kafkaTemplate) {
         this.userClient = userClient;
         this.driverClient = driverClient;
@@ -53,13 +55,32 @@ public class RideServiceImpl implements  RideService {
         ride.setRideStatus(RideStatus.REQUESTED);
         ride.setBookedAt(LocalDateTime.now());
 
+        double lat1 = Math.toRadians(createRideRequest.getPickedLatitude());
+        double lat2 = Math.toRadians(createRideRequest.getDroppedLatitude());
+        double dlat = Math.toRadians(createRideRequest.getDroppedLatitude() - createRideRequest.getPickedLatitude());
+        double dlon = Math.toRadians(createRideRequest.getDroppedLongitude() - createRideRequest.getPickedLongitude());
+
+        double a = Math.sin( dlat /2 ) * Math.sin(dlat /2)
+                + Math.cos( lat1 ) * Math.cos(lat2)
+                * Math.sin(dlon /2) *  Math.sin(dlon /2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        double result =  EARTH_RADIUS_KM * c;
+
+        double resultround = Math.round(result*100)/100.0;
+        ride.setDistance(resultround);
+
+        double calculateFare= 50 + resultround * 15 ;
+        double rounded = Math.round(calculateFare*100)/100.0;
+
+        ride.setFare(rounded);
         List<DriverResponse> driverResponse = driverClient.getDriversByStatus("online");
         if(driverResponse.isEmpty()){
             throw new IllegalArgumentException("Driver Not Available");
         }
         ride.setDriverId(driverResponse.get(0).getId());
         RideEntity saveRide = rideRepo.save(ride);
-        System.out.println("save ride");
         CreateOrderReq createOrderReq = new CreateOrderReq();
         createOrderReq.setDriverId(saveRide.getDriverId());
         createOrderReq.setFare(saveRide.getFare());
@@ -70,15 +91,7 @@ public class RideServiceImpl implements  RideService {
         createOrderReq.setRideId(saveRide.getRideId());
 
         kafkaTemplate.send("create-order",  createOrderReq);
-
-        RideResponse rideResponse = new RideResponse();
-        rideResponse.setRideId(saveRide.getRideId());
-        rideResponse.setPickedAddress(saveRide.getPickedAddress());
-        rideResponse.setUserId(saveRide.getUserId());
-        rideResponse.setDriverId(saveRide.getDriverId());
-        rideResponse.setStatus(saveRide.getRideStatus());
-        rideResponse.setDroppedAddress(saveRide.getDropedAddress());
-
+        RideResponse rideResponse = RideMapper.toResponse(saveRide);
         System.out.println("Every thing is fine");
         return rideResponse;
     }
@@ -142,7 +155,7 @@ public class RideServiceImpl implements  RideService {
                         System.out.println("Kafka Send successfully");
                         }
                 });
-        System.out.println("Update Order Status");
+
         return RideMapper.toResponse(savedRide);
     }
 
