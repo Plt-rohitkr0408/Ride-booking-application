@@ -31,4 +31,4 @@ mvn spring-boot:run for each service
 
 ### 🔗 Author
 Rohit Kumar Pandit - Java Backend Developer
-LinkedIn: [your link]
+LinkedIn: https://www.linkedin.com/in/pltrohitkr0408
